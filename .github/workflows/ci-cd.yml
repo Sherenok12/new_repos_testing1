@@ -36,3 +36,31 @@ jobs:
         with:
           name: junit-report
           path: report.xml
+ 
+  build:
+    needs: [test]               
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build project (імітація)
+        run: |
+          mkdir build
+          echo "Build completed successfully!" > build/info.txt
+          echo "Version: 1.0.0" >> build/info.txt
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-folder
+          path: build/

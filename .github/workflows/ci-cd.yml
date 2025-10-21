@@ -11,30 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'   # ← кешування npm-залежностей
+          cache: 'npm'     # <-- тут кеш залежностей
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --json --outputFile=test-results.json
 
-      # Збереження результатів тестів (наприклад, coverage)
-      - name: Upload test artifacts
+      - name: Upload test report
         if: success() || failure()   # навіть якщо тести впали
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: |
-            coverage/
-            test-results/
-            junit.xml
+          name: test-report          # ім’я артефакта
+          path: test-results.json    # шлях до звіту
           if-no-files-found: ignore
-

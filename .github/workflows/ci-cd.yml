@@ -36,7 +36,7 @@ jobs:
         with:
           name: junit-report
           path: report.xml
- 
+          
   build:
     needs: [test]               
     runs-on: ubuntu-latest
@@ -64,3 +64,27 @@ jobs:
         with:
           name: build-folder
           path: build/
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-folder
+          path: build
+
+      - name: Deploy (імітація)
+        run: |
+          echo "Starting deployment..."
+          echo "Using secret DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}"
+          echo "Deploying files from build folder:"
+          ls -la build
+          echo "Deployment completed successfully!"

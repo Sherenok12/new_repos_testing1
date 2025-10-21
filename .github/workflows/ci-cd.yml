@@ -1,48 +1,38 @@
-name: CI/CD
+name: CI/CD Pipeline
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Завантаження коду
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2️⃣ Встановлення Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
+          python-version: '3.12'
 
-      # 3️⃣ Кешування npm-залежностей (працює навіть без package-lock.json)
-      - name: Cache npm
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-
 
-      # 4️⃣ Встановлення залежностей
       - name: Install dependencies
-        run: npm install
+        run: pip install -r requirements.txt
 
-      # 5️⃣ Запуск тестів
       - name: Run tests
-        run: npm test -- --json --outputFile=test-results.json
+        run: pytest --junitxml=report.xml || true
 
-      # 6️⃣ Збереження результатів тестів як артефакт
       - name: Upload test report
-        if: success() || failure()   # навіть якщо тести впали
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
-          path: test-results.json
-          if-no-files-found: ignore
+          name: junit-report
+          path: report.xml

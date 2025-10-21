@@ -11,25 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Завантаження коду
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Встановлення Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3️⃣ Кешування npm-залежностей (працює навіть без package-lock.json)
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      # 4️⃣ Встановлення залежностей
       - name: Install dependencies
         run: npm install
 
-
+      # 5️⃣ Запуск тестів
       - name: Run tests
         run: npm test -- --json --outputFile=test-results.json
 
+      # 6️⃣ Збереження результатів тестів як артефакт
       - name: Upload test report
         if: success() || failure()   # навіть якщо тести впали
         uses: actions/upload-artifact@v4
         with:
-          name: test-report          # ім’я артефакта
-          path: test-results.json    # шлях до звіту
+          name: test-report
+          path: test-results.json
           if-no-files-found: ignore
